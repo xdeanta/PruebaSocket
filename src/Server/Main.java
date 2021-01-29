@@ -1,8 +1,6 @@
 package Server;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.ServerSocket;
@@ -26,16 +24,64 @@ public class Main {
 
             System.out.println("Conexi�n recibida");
 
-            InputStream is=newSocket.getInputStream();
-            OutputStream os=newSocket.getOutputStream();
+            DataInputStream is=new DataInputStream(newSocket.getInputStream());
+            DataOutputStream os=new DataOutputStream(newSocket.getOutputStream());
 
-            byte[] mensaje=new byte[25];
-            is.read(mensaje);
+            os.writeUTF("Bienvenido a la calculadora remota");
 
-            System.out.println("Mensaje recibido: "+new String(mensaje));
+            int opcion = is.readInt();
+            int operandos[] = new int[5];
+            int resultado=0;
+            float resultado_div=0;
+            for(int i=0;i < 5; i++){
+                operandos[i]=is.readInt();
+            }
 
+            switch (opcion){
+                case 1:
+                    for(int i=0;i < 5; i++){
+                        resultado=resultado+operandos[i];
+                    }
+                    break;
+                case 2:
+                    int mayor=-1;
+                    for(int i=0;i < 5; i++){
+                        if(operandos[i] > mayor){
+                            mayor=operandos[i];
+                        }
+                    }
+                    resultado=mayor;
+                    System.out.println("Mayor: " + resultado);
+                    for(int i=0;i < 5; i++){
+                        if(operandos[i]==mayor){
+                            continue;
+                        }
+                        resultado=resultado-operandos[i];
+                    }
+                    break;
+                case 3:
+                    resultado=1;
+                    for(int i=0;i < 5; i++){
+                        resultado=resultado*operandos[i];
+                    }
+                    break;
+                case 4:
+                    resultado_div=operandos[0]/operandos[1];
+                    for(int i=1;i < 5; i++){
+                        resultado_div=resultado_div/operandos[i];
+                        System.out.println("Resultado: " + resultado_div + " operando: " + operandos[i]);
+                    }
+                    break;
+            }
+            if(opcion == 4){
+                os.writeFloat(resultado_div);
+            }else {
+                os.writeInt(resultado);
+            }
             System.out.println("Cerrando el nuevo socket");
 
+            is.close();
+            os.close();
             newSocket.close();
 
             System.out.println("Cerrando el socket servidor");
